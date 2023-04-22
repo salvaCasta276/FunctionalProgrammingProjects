@@ -145,13 +145,21 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply _ _ _ _ = Nothing
-{- TO BE WRITTEN -}
+transformationApply wc transformer string pattern_transformation
+  | match_result /= Nothing = Just substitute_result
+  | otherwise = Nothing
+  where
+    match_result = match wc pattern_transformation!!0 string
+    transformed_match = transformer $ fromJust match_result
+    substitute_result = substitute wc pattern_transformation!!1 transformed_match
 
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
-transformationsApply _ _ _ _ = Nothing
-{- TO BE WRITTEN -}
-
-
+transformationsApply wc transformer pattern_transformations string
+  | failed_results_len < length transformation_results = transformation_results!!(failed_results_len + 1)
+  | otherwise = Nothing
+  where
+    transformation_results = map (transformationApply wc transformer string) pattern_transformations
+    failed_results = takeWhile isNothing transformationResults
+    failed_results_len = length failed_results
