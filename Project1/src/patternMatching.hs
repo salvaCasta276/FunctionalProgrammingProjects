@@ -1,10 +1,10 @@
 import Data.List
 
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat (replace [a] (map (\x -> [x]) t) s)
+substitute a t s = substituteByParts [a] (map (\x -> [x]) t) (replicate (countElem a t) s) 
 
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match wildcard p s = (head . head) (filter (\x -> substituteByParts [wildcard] (map (\x -> [x]) p) x == s) (productSpace contSubsequences (countElem wildcard p)))
+match wildcard p s = (head . head) (filter (\x -> substituteByParts [wildcard] (map (\x -> [x]) p) x == s) (productSpace (replicate (countElem wildcard p) (contSubsequences s))))
 
 -- Returns a list with all of the contiguous subsequences of xs, not including the empty list
 -- It may contain repeated elements
@@ -23,12 +23,8 @@ substituteByParts a (y:ys) (x:xs)
 countElem :: Eq a => a -> [a] -> Int
 countElem a as = length (filter (\x -> x == a) as)
 
--- Replaces all the appearances of a in as for b
-replace :: Eq a => a -> [a] -> a -> [a]
-replace a as b = map (\x -> if x == a then b else a) as
-
 -- Given a list xs and a nonnegative integer n, it generates the set xs^n
 -- Observe that it may contain repeated elements, depending if xs has repeated elements or not
-productSpace :: [a] -> Int -> [[a]]
-productSpace _ 0 = [[]]
-productSpace xs n = [a:as | a <- xs, as <- productSpace xs (n-1)] 
+productSpace :: [[a]] -> [[a]]
+productSpace [] = [[]]
+productSpace (x:xs) = [a:as | a <- x, as <- productSpace xs] 
