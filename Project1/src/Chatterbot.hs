@@ -26,16 +26,24 @@ type BotBrain = [(Phrase, [Phrase])]
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-{- TO BE WRITTEN -}
-stateOfMind _ = return id
+stateOfMind brain = do
+  r <- randomIO :: IO Float
+  index <- floor $ (length brain) * r
+  return rulesApply brain!!(index)
+
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-rulesApply _ = id
+rulesApply transformations phrase = transformationsApply "*" reflect phrase transformations
+
+reflector :: String -> String
+reflector word
+  | reflection /= Nothing = fromJust reflection
+  | otherwise = word
+  where reflection = lookup word reflections
 
 reflect :: Phrase -> Phrase
-{- TO BE WRITTEN -}
-reflect = id
+reflect words = map reflector words
+    
 
 reflections =
   [ ("am",     "are"),
@@ -160,6 +168,6 @@ transformationsApply wc transformer pattern_transformations string
   | failed_results_len < length transformation_results = transformation_results!!(failed_results_len + 1)
   | otherwise = Nothing
   where
-    transformation_results = map (transformationApply wc transformer string) pattern_transformations
+    transformation_results = map $ transformationApply wc transformer string $ pattern_transformations
     failed_results = takeWhile isNothing transformationResults
     failed_results_len = length failed_results
