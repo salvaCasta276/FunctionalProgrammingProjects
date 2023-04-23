@@ -1,0 +1,6 @@
+-Is there any way in which I can operate with infinite data structures in finite time, such as peforming "filter (not . even) (filter even [0..])" (observe that the result is a finite list, but it still takes infinite time to produce the result). If not, is there any language which allows this kind of operations?
+
+-Is it bad practice to use the if statement? What about guards?
+
+-Recursion or function composition? Is recursion more "functional" than iteration? Why?
+
