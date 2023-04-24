@@ -26,10 +26,10 @@ type BotBrain = [(Phrase, [Phrase])]
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-stateOfMind brain = do
-  r <- randomIO :: IO Float
-  index <- floor $ (length brain) * r
-  return rulesApply brain!!(index)
+-- stateOfMind brain = do
+--   r <- randomIO :: IO Float
+--   index <- floor $ (length brain) * r
+--   return rulesApply brain!!(index)
 
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
