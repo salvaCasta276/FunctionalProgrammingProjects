@@ -1,4 +1,5 @@
 import Data.List
+import Data.Maybe
 
 main :: IO ()
 main = return ()
@@ -6,8 +7,8 @@ main = return ()
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute a t s = concat (substituteByParts [a] (map (\x -> [x]) t) (replicate (countElem a t) s))
 
-match :: Eq a => a -> [a] -> [a] -> [a]
-match wildcard p s = (head . head) (filter (\x -> concat (substituteByParts [wildcard] (map (\x -> [x]) p) x) == s) (productSpace (replicate (countElem wildcard p) (contSubsequences s))))
+match :: Eq a => a -> [a] -> [a] -> Maybe [a]
+match wildcard p s = (>>=) (listToMaybe (filter (\x -> concat (substituteByParts [wildcard] (map (\x -> [x]) p) x) == s) (productSpace (replicate (countElem wildcard p) (contSubsequences s))))) listToMaybe
 
 -- Returns a list with all of the contiguous subsequences of xs, not including the empty list
 -- It may contain repeated elements
@@ -31,3 +32,4 @@ countElem a as = length (filter (\x -> x == a) as)
 productSpace :: [[a]] -> [[a]]
 productSpace [] = [[]]
 productSpace (x:xs) = [a:as | a <- x, as <- productSpace xs] 
+
