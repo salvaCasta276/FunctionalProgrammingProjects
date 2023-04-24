@@ -1,8 +1,15 @@
 import Data.List
 import Data.Maybe
+import System.Environment (getArgs)
 
 main :: IO ()
-main = return ()
+main = do
+  args <- getArgs
+  let arg1 = (head . head) (args)
+  let arg2 = args !! 1
+  let arg3 = args !! 2
+  let result = substitute arg1 arg2 arg3 
+  print result
 
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute a t s = concat (substituteByParts [a] (map (\x -> [x]) t) (replicate (countElem a t) s))
@@ -20,7 +27,7 @@ substituteByParts :: Eq a => a -> [a] -> [a] -> [a]
 substituteByParts _ [] _ = []
 substituteByParts _ ys [] = ys
 substituteByParts a (y:ys) (x:xs) 
-    | y /= a = substituteByParts a ys (x:xs)
+    | y /= a = y:substituteByParts a ys (x:xs)
     | otherwise = x:substituteByParts a ys xs
 
 -- Counts the number of appearances of a in the list as
