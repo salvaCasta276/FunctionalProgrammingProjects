@@ -1,10 +1,13 @@
 import Data.List
 
-substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = substituteByParts [a] (map (\x -> [x]) t) (replicate (countElem a t) s) 
+main :: IO ()
+main = return ()
 
-match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match wildcard p s = (head . head) (filter (\x -> substituteByParts [wildcard] (map (\x -> [x]) p) x == s) (productSpace (replicate (countElem wildcard p) (contSubsequences s))))
+substitute :: Eq a => a -> [a] -> [a] -> [a]
+substitute a t s = concat (substituteByParts [a] (map (\x -> [x]) t) (replicate (countElem a t) s))
+
+match :: Eq a => a -> [a] -> [a] -> [a]
+match wildcard p s = (head . head) (filter (\x -> concat (substituteByParts [wildcard] (map (\x -> [x]) p) x) == s) (productSpace (replicate (countElem wildcard p) (contSubsequences s))))
 
 -- Returns a list with all of the contiguous subsequences of xs, not including the empty list
 -- It may contain repeated elements
@@ -16,7 +19,7 @@ substituteByParts :: Eq a => a -> [a] -> [a] -> [a]
 substituteByParts _ [] _ = []
 substituteByParts _ ys [] = ys
 substituteByParts a (y:ys) (x:xs) 
-    | y != a = substituteByParts a ys (x:xs)
+    | y /= a = substituteByParts a ys (x:xs)
     | otherwise = x:substituteByParts a ys xs
 
 -- Counts the number of appearances of a in the list as
