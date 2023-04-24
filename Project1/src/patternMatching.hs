@@ -8,7 +8,10 @@ main = do
   let arg1 = (head . head) (args)
   let arg2 = args !! 1
   let arg3 = args !! 2
-  let result = substitute arg1 arg2 arg3 
+  print arg1
+  print arg2
+  print arg3
+  let result = match arg1 arg2 arg3 
   print result
 
 substitute :: Eq a => a -> [a] -> [a] -> [a]
