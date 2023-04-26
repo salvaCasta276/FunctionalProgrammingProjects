@@ -26,12 +26,46 @@ substituteByParts a (y:ys) (x:xs)
     | otherwise = x:substituteByParts a ys xs
 
 
+-- Match will remove the string found before the first * and then use singleWM and longerWM to move one step
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match a t s = getIndexes (parse a (a:t))
+match wc ps xs = let
+    psHead = takeWhile (/=wc) ps
+    in if isPrefixOf psHead xs then longerWildcardMatch (removePrefix psHead xs) (removePrefix psHead ps) else Nothing
+
+
+-- Helper function to match
+singleWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+singleWildcardMatch (wc:ps) (x:xs) = let
+    psHead = takeWhile (/=wc) ps
+    in if isPrefixOf psHead xs then (x:longerWildcardMatch (removePrefix psHead ps) (removePrefix psHead xs)) else longerWildcardMatch (wc:ps) (x:xs)
+
+longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+longerWildcardMatch (wc:ps) (x:xs) = 
+
+removePrefix :: Eq a => [a] -> [a] -> [a]
+removePrefix [] t = Just t
+removePrefix (s:ss) (t:ts)
+    | s == t = removePrefix ss ts
+    | otherwise = []
+
+
+
+-------------------Way b------------------------
 
 -- Given a char x and a list x it splits the list where the x char is found
 split :: Eq a => [a] -> [[a]]
 split x xs = map (delete x) (groupBy (\a b -> b /= x) xs)
+
+f _ (t:ts) [] = -- There is no equality
+f _ [] (s:ss) = -- There is no equality
+f _ [] [] = []
+f a (t:ts) ss
+    | isPrefixOf t ss = f a ts (removePrefix t ss)
+    | otherwise = (head ss:f a (t:ts) (tail ss))
+
+-------------------Way a------------------------
+match :: Eq a => a -> [a] -> [a] -> Maybe [a]
+match a t s = getIndexes (parse a (a:t))
 
 -- Generates a list containing all of the indexes where a appears as a sublist of s
 getIndexes :: Eq a => [a] -> [a] -> [Int]

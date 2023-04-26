@@ -1,3 +1,0 @@
-s1*s2*...*sn
-a1,a2,...,an-1 such that s1a1...an-1sn = s (1)
-ai in S, find a solution to (1) in S^n-1
