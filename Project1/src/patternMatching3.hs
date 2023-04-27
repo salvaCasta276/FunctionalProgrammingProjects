@@ -7,12 +7,19 @@ main :: IO ()
 main = do
   args <- getArgs
   let arg1 = (head . head) (args)
-  let arg2 = args !! 1
-  let arg3 = args !! 2
+  let arg3 = args !! 1
+  let arg4 = args !! 2
+  let arg5 = args !! 3
+  let arg6 = args !! 4
+  let arg7 = args !! 5
   print arg1
-  print arg2
   print arg3
-  let result = match arg1 arg2 arg3
+  print arg4
+  print arg5
+  print arg6
+  print arg7
+  --let result = match arg1 arg4 arg3
+  let result = transformationsApply arg1 id arg3 [(arg4, arg5), (arg6, arg7)]
   print result
 
 
@@ -43,3 +50,8 @@ match wc (p:ps) (x:xs)
 --singleWildcardMatch (wc:ps) (x:xs) = if isPrefixOf (takeWhile (/=wc) ps) xs then (x:match wc ps xs) >>= ((\x -> Just [x]) . head) else Nothing
 --longerWildcardMatch (wc:ps) (x:xs) = if isPrefixOf (takeWhile (/=wc) ps) xs then Nothing else (x:match wc (wc:ps) xs)
 
+transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
+transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
+
+transformationsApply :: Eq a => a -> ([a] -> [a]) -> [a] -> [([a], [a])] -> Maybe [a]
+transformationsApply wc f s pts = listToMaybe (mapMaybe (transformationApply wc f s) pts)
