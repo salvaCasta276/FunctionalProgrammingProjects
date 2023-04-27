@@ -35,15 +35,8 @@ stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 rulesApply transformations phrase = transformationsApply "*" reflect phrase transformations
 
-reflector :: String -> String
-reflector word
-  | reflection /= Nothing = fromJust reflection
-  | otherwise = word
-  where reflection = lookup word reflections
-
 reflect :: Phrase -> Phrase
-reflect words = map reflector words
-    
+reflect words = map (try (\y -> lookup y reflections)) words
 
 reflections =
   [ ("am",     "are"),
@@ -115,8 +108,8 @@ reductionsApply _ = id
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute a t s = concat (replace [a] (map (\x -> [x]) t) s)
 
-replace :: Eq a => a -> a -> [a] -> [a]
-replace _ _ [] = []
+replace :: Eq a => a -> [a] -> a -> [a]
+replace _ [] _ = []
 replace a (x:xs) b
     | a == x = (b:replace a xs b)
     | otherwise = (x:replace a xs b)
@@ -124,11 +117,11 @@ replace a (x:xs) b
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match _ [] [] = []
+match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (x:match wc ps xs) >>= ((\x -> Just [x]) . head) else (x:match wc (wc:ps) xs)
+    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (mmap (x:) (match wc ps xs)) >>= ((\x -> Just [x]) . head) else (mmap (x:) (match wc (wc:ps) xs))
 --    | p == wc = orElse (singleWildcardMatch wc (p:ps) (x:xs)) (longerWildcardMatch wc (p:ps) (x:xs))
     | p == x = match wc ps xs
     | otherwise = Nothing
@@ -137,8 +130,6 @@ match wc (p:ps) (x:xs)
 --singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
 --singleWildcardMatch (wc:ps) (x:xs) = if isPrefixOf (takeWhile (/=wc) ps) xs then (x:match wc ps xs) >>= ((\x -> Just [x]) . head) else Nothing
 --longerWildcardMatch (wc:ps) (x:xs) = if isPrefixOf (takeWhile (/=wc) ps) xs then Nothing else (x:match wc (wc:ps) xs)
-
-
 
 -- Test cases --------------------
 
@@ -158,23 +149,9 @@ matchCheck = matchTest == Just testSubstitutions
 -- Applying patterns
 --------------------------------------------------------
 
--- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wc transformer string pattern_transformation
-  | match_result /= Nothing = Just substitute_result
-  | otherwise = Nothing
-  where
-    match_result = match wc pattern_transformation!!0 string
-    transformed_match = transformer $ fromJust match_result
-    substitute_result = substitute wc pattern_transformation!!1 transformed_match
+transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
 
+transformationsApply :: Eq a => a -> ([a] -> [a]) -> [a] -> [([a], [a])] -> Maybe [a]
+transformationsApply wc f s pts = listToMaybe (mapMaybe (transformationApply wc f s) pts)
 
--- Applying a list of patterns until one succeeds
-transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
-transformationsApply wc transformer pattern_transformations string
-  | failed_results_len < length transformation_results = transformation_results!!(failed_results_len + 1)
-  | otherwise = Nothing
-  where
-    transformation_results = map $ transformationApply wc transformer string $ pattern_transformations
-    failed_results = takeWhile isNothing transformationResults
-    failed_results_len = length failed_results

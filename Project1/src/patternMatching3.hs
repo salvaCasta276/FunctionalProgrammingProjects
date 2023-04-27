@@ -6,20 +6,15 @@ import System.Environment (getArgs)
 main :: IO ()
 main = do
   args <- getArgs
-  let arg1 = (head . head) (args)
+  --let arg1 = (head . head) (args)
   let arg3 = args !! 1
-  let arg4 = args !! 2
-  let arg5 = args !! 3
-  let arg6 = args !! 4
-  let arg7 = args !! 5
-  print arg1
-  print arg3
-  print arg4
-  print arg5
-  print arg6
-  print arg7
+  --let arg4 = args !! 2
+  --let arg5 = args !! 3
+  --let arg6 = args !! 4
+  --let arg7 = args !! 5
+  let result = reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"]
   --let result = match arg1 arg4 arg3
-  let result = transformationsApply arg1 id arg3 [(arg4, arg5), (arg6, arg7)]
+  --let result = transformationsApply arg1 id arg3 [(arg4, arg5), (arg6, arg7)]
   print result
 
 
@@ -55,3 +50,32 @@ transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc 
 
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [a] -> [([a], [a])] -> Maybe [a]
 transformationsApply wc f s pts = listToMaybe (mapMaybe (transformationApply wc f s) pts)
+
+type Phrase = [String]
+type PhrasePair = (Phrase, Phrase)
+type BotBrain = [(Phrase, [Phrase])]
+
+reflections =
+  [ ("am",     "are"),
+    ("was",    "were"),
+    ("i",      "you"),
+    ("i'm",    "you are"),
+    ("i'd",    "you would"),
+    ("i've",   "you have"),
+    ("i'll",   "you will"),
+    ("my",     "your"),
+    ("me",     "you"),
+    ("are",    "am"),
+    ("you're", "i am"),
+    ("you've", "i have"),
+    ("you'll", "i will"),
+    ("your",   "my"),
+    ("yours",  "mine"),
+    ("you",    "me")
+  ]
+
+
+reflect :: Phrase -> Phrase
+reflect words = map (try (\y -> lookup y reflections)) words
+
+
