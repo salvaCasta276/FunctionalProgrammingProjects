@@ -2,6 +2,8 @@ import Data.List
 import Data.Maybe
 import Utilities
 import System.Environment (getArgs)
+import System.Random
+import Data.Char
 
 main :: IO ()
 main = do
@@ -12,7 +14,9 @@ main = do
   --let arg5 = args !! 3
   --let arg6 = args !! 4
   --let arg7 = args !! 5
-  let result = reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"]
+  let result = reduce (words "can you please tell me what Haskell is")
+  --let result = rulesCompile [ ("", ["Speak up! I can't hear you."]), ("I need *", ["Why do you need * ?", "Would it really help you to get * ?", "Are you sure you need * ?"]), ("Why don't you *", ["Do you really think I don't * ?", "Perhaps eventually I will * .", "Do you really want me to * ?"]), ("Why can't I *", ["Do you think you should be able to * ?", "If you could * , what would you do?"])]
+  --let result = reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"]
   --let result = match arg1 arg4 arg3
   --let result = transformationsApply arg1 id arg3 [(arg4, arg5), (arg6, arg7)]
   print result
@@ -20,7 +24,7 @@ main = do
 
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat (replace [a] (map (\x -> [x]) t) s)
+substitute a t s = concat (replace [a] (map pure t) s)
       
 replace :: Eq a => a -> [a] -> a -> [a]
 replace _ [] _ = []
@@ -35,7 +39,7 @@ match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (mmap (x:) (match wc ps xs)) >>= ((\x -> Just [x]) . head) else (mmap (x:) (match wc (wc:ps) xs))
+    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (mmap (x:) (match wc ps xs)) >>= (Just . pure . head) else (mmap (x:) (match wc (wc:ps) xs))
 --    | p == wc = orElse (singleWildcardMatch wc (p:ps) (x:xs)) (longerWildcardMatch wc (p:ps) (x:xs))
     | p == x = match wc ps xs
     | otherwise = Nothing
@@ -74,8 +78,35 @@ reflections =
     ("you",    "me")
   ]
 
+reductions :: [PhrasePair]
+reductions = (map.map2) (words, words)
+  [ ( "please *", "*" ),
+    ( "can you *", "*" ),
+    ( "could you *", "*" ),
+    ( "tell me if you are *", "are you *" ),
+    ( "tell me who * is", "who is *" ),
+    ( "tell me what * is", "what is *" ),
+    ( "do you know who * is", "who is *" ),
+    ( "do you know what * is", "what is *" ),
+    ( "are you very *", "are you *" ),
+    ( "i am very *", "i am *" ),
+    ( "hi *", "hello *")
+  ]
+
+prepare :: String -> Phrase
+prepare = reduce . words . map toLower . filter (not . flip elem "*.,:;!#%&|") 
+
+reduce :: Phrase -> Phrase
+reduce = reductionsApply reductions
 
 reflect :: Phrase -> Phrase
-reflect words = map (try (\y -> lookup y reflections)) words
+reflect = map (try (flip lookup reflections))
 
+rulesApply :: [PhrasePair] -> Phrase -> Phrase
+rulesApply pairs = try (flip (transformationsApply "*" reflect) pairs) 
 
+rulesCompile :: [(String, [String])] -> BotBrain
+rulesCompile = map (map2 (prepare, map prepare))
+
+reductionsApply :: [PhrasePair] -> Phrase -> Phrase
+reductionsApply pairs = try (flip (transformationsApply "*" id ) pairs)

@@ -2,6 +2,8 @@ module Chatterbot where
 import Utilities
 import System.Random
 import Data.Char
+import Data.List
+import Data.Maybe
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -26,17 +28,17 @@ type BotBrain = [(Phrase, [Phrase])]
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
+stateOfMind b = return id
 -- stateOfMind brain = do
 --   r <- randomIO :: IO Float
 --   index <- floor $ (length brain) * r
 --   return rulesApply brain!!(index)
 
-
-rulesApply :: [PhrasePair] -> Phrase -> Phrase
-rulesApply transformations phrase = transformationsApply "*" reflect phrase transformations
+rulesApply :: [PhrasePair] -> Phrase -> Maybe Phrase
+rulesApply = flip (transformationsApply "*" reflect)
 
 reflect :: Phrase -> Phrase
-reflect words = map (try (\y -> lookup y reflections)) words
+reflect = map (try (flip lookup reflections))
 
 reflections =
   [ ("am",     "are"),
@@ -70,8 +72,7 @@ prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|") 
 
 rulesCompile :: [(String, [String])] -> BotBrain
-{- TO BE WRITTEN -}
-rulesCompile _ = []
+rulesCompile = map (map2 (prepare, map prepare))
 
 
 --------------------------------------
@@ -96,8 +97,7 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-reductionsApply _ = id
+reductionsApply pairs = try (flip (transformationsApply "*" id ) pairs)
 
 
 -------------------------------------------------------
@@ -106,7 +106,7 @@ reductionsApply _ = id
 
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat (replace [a] (map (\x -> [x]) t) s)
+substitute a t s = concat (replace [a] (map pure t) s)
 
 replace :: Eq a => a -> [a] -> a -> [a]
 replace _ [] _ = []
@@ -121,7 +121,7 @@ match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (mmap (x:) (match wc ps xs)) >>= ((\x -> Just [x]) . head) else (mmap (x:) (match wc (wc:ps) xs))
+    | p == wc = if isPrefixOf (takeWhile (/=wc) ps) xs then (mmap (x:) (match wc ps xs)) >>= (Just . pure . head) else (mmap (x:) (match wc (wc:ps) xs))
 --    | p == wc = orElse (singleWildcardMatch wc (p:ps) (x:xs)) (longerWildcardMatch wc (p:ps) (x:xs))
     | p == x = match wc ps xs
     | otherwise = Nothing
