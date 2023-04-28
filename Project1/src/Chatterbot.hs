@@ -34,8 +34,8 @@ stateOfMind b = return id
 --   index <- floor $ (length brain) * r
 --   return rulesApply brain!!(index)
 
-rulesApply :: [PhrasePair] -> Phrase -> Maybe Phrase
-rulesApply = flip (transformationsApply "*" reflect)
+rulesApply :: [PhrasePair] -> Phrase -> Phrase
+rulesApply pairs = try (flip (transformationsApply "*" reflect) pairs) 
 
 reflect :: Phrase -> Phrase
 reflect = map (try (flip lookup reflections))
