@@ -16,6 +16,8 @@ module Main where
       rulesApply transformations (words "I hate my mother")
         ~?= (words "Why do you hate your mother ?"),
       rulesApply transformations (words "ARGH!")
+        ~?= (words "ARGH!"),
+      rulesApply transformations (words "")
         ~?= (words "")
     ]
     
