@@ -28,14 +28,16 @@ type BotBrain = [(Phrase, [Phrase])]
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-stateOfMind b = return id
--- stateOfMind brain = do
---   r <- randomIO :: IO Float
---   index <- floor $ (length brain) * r
---   return rulesApply brain!!(index)
+--stateOfMind b = return id
+stateOfMind brain = do
+  rand <- randomIO :: IO Int
+  let randomBrain = map (\x -> (fst x, (snd x)!!(mod rand (length (snd x))))) brain
+  return (\x -> rulesApply randomBrain x)
+  --index <- floor $ (length brain) * r
+  --return rulesApply brain!!(index)
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-rulesApply pairs = try (flip (transformationsApply "*" reflect) pairs) 
+rulesApply pairs = try (transformationsApply "*" reflect pairs) 
 
 reflect :: Phrase -> Phrase
 reflect = map (try (flip lookup reflections))
@@ -97,7 +99,7 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-reductionsApply pairs = try (flip (transformationsApply "*" id ) pairs)
+reductionsApply pairs = try (transformationsApply "*" id pairs)
 
 
 -------------------------------------------------------
@@ -152,6 +154,6 @@ matchCheck = matchTest == Just testSubstitutions
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
 transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
 
-transformationsApply :: Eq a => a -> ([a] -> [a]) -> [a] -> [([a], [a])] -> Maybe [a]
-transformationsApply wc f s pts = listToMaybe (mapMaybe (transformationApply wc f s) pts)
+transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
+transformationsApply wc f pts s = listToMaybe (mapMaybe (transformationApply wc f s) pts)
 
