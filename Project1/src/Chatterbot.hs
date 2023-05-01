@@ -33,14 +33,14 @@ type BotBrain = [(Phrase, [Phrase])]
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 stateOfMind brain = do
   rand <- randomIO :: IO Int
-  let randomBrain = map (\x -> (fst x, snd x !! ((mod rand) . (length . snd)) x)) brain
+  let randomBrain = map (\x -> (fst x, snd x !! (mod rand . (length . snd)) x)) brain
   return (rulesApply randomBrain)
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 rulesApply = try . transformationsApply "*" reflect 
 
 reflect :: Phrase -> Phrase
-reflect = map (try (flip lookup reflections))
+reflect = map (try (`lookup` reflections))
 
 reflections =
   [ ("am",     "are"),
@@ -104,7 +104,7 @@ reductionsApply = try . transformationsApply "*" id
 
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat ((flip . replace . pure) a (map pure t) s)
+substitute a t s = concat ((replace . pure) a s (map pure t))
 
 replace :: Eq a => a -> a -> [a] -> [a]
 replace x b = foldr (\a -> if x == a then (b:) else (a:)) []
@@ -141,7 +141,7 @@ matchCheck = matchTest == Just testSubstitutions
 --------------------------------------------------------
 
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wc f s pt = mmap (((flip substitute) . snd) pt wc) (mmap f (((flip match) . fst) pt wc s))
+transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
 
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
 transformationsApply wc f pts s = (listToMaybe .^ mapMaybe .^^ transformationApply) wc f s pts
