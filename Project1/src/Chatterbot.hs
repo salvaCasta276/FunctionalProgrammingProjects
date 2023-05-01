@@ -4,6 +4,8 @@ import System.Random
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Bool
+import Control.Arrow
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -23,6 +25,10 @@ chatterbot botName botRules = do
 type Phrase = [String]
 type PhrasePair = (Phrase, Phrase)
 type BotBrain = [(Phrase, [Phrase])]
+(.^) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
+(.^) = (.) . (.)
+--(cmp3) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
+--(cmp3) = (.) . (.) . (.)
 
 
 --------------------------------------------------------
@@ -31,13 +37,13 @@ stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 --stateOfMind b = return id
 stateOfMind brain = do
   rand <- randomIO :: IO Int
-  let randomBrain = map (\x -> (fst x, (snd x)!!(mod rand (length (snd x))))) brain
-  return (\x -> rulesApply randomBrain x)
+  let randomBrain = map (\x -> (fst x, snd x !! ((mod rand) . (length . snd)) x) ) brain
+  return (rulesApply randomBrain)
   --index <- floor $ (length brain) * r
   --return rulesApply brain!!(index)
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-rulesApply pairs = try (transformationsApply "*" reflect pairs) 
+rulesApply = try . transformationsApply "*" reflect 
 
 reflect :: Phrase -> Phrase
 reflect = map (try (flip lookup reflections))
@@ -99,7 +105,7 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-reductionsApply pairs = try (transformationsApply "*" id pairs)
+reductionsApply = try . transformationsApply "*" id
 
 
 -------------------------------------------------------
@@ -108,13 +114,25 @@ reductionsApply pairs = try (transformationsApply "*" id pairs)
 
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat (replace [a] (map pure t) s)
+--substitute a t s = concat (flip ((replace . pure) a) (map pure t) s)
+substitute a t s = concat ((flip . replace . pure) a (map pure t) s)
+--substitutte = concat . (((replace . pure) . (map pure)) . id)
 
-replace :: Eq a => a -> [a] -> a -> [a]
-replace _ [] _ = []
-replace a (x:xs) b
-    | a == x = (b:replace a xs b)
-    | otherwise = (x:replace a xs b)
+replace :: Eq a => a -> a -> [a] -> [a]
+--replace _ [] _ = []
+--replace a (x:xs) b
+--    | (==) a x = (:) b (replace a xs b)
+--    | otherwise = (:) x (replace a xs b)
+
+replace x b = foldr (\a -> if (x == a) 
+                     then (b:)
+                     else (a:)) []
+
+--replace x b = foldr (if (.^) ((==) x) const 
+--                     then (.^) ((:) b) (flip const)
+--                     else (:)) []
+
+--replace x b = foldr (bool <$> (:) <*> ((.^) ((:) b) (flip const)) <*> ((.^) ((==) x) const))
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
@@ -123,13 +141,13 @@ match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    | p == wc = if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
-                  then (mmap (x:) (match wc ps xs)) >>= (Just . pure . head)
-                  else (mmap (x:) (match wc (wc:ps) xs))
+    | (==) p wc = if (||) ((&&) ((not . null) nextWord) (isPrefixOf nextWord xs)) ((&&) (null nextWord) (null xs))
+                  then (>>=) (mmap ((:) x) (match wc ps xs)) (Just . pure . head)
+                  else (mmap ((:) x) (match wc (wc:ps) xs))
 --    | p == wc = orElse (singleWildcardMatch wc (p:ps) (x:xs)) (longerWildcardMatch wc (p:ps) (x:xs))
-    | p == x = match wc ps xs
+    | (==) p x = match wc ps xs
     | otherwise = Nothing
-    where nextWord = (takeWhile (/=wc) ps)
+    where nextWord = (takeWhile (flip (/=) wc) ps)
 
 -- Helper function to match
 --singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
