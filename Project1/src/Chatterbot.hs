@@ -27,8 +27,8 @@ type PhrasePair = (Phrase, Phrase)
 type BotBrain = [(Phrase, [Phrase])]
 (.^) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (.^) = (.) . (.)
---(cmp3) :: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
---(cmp3) = (.) . (.) . (.)
+(.^^):: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
+(.^^)= (.) . (.) . (.)
 
 
 --------------------------------------------------------
@@ -173,8 +173,9 @@ matchCheck = matchTest == Just testSubstitutions
 --------------------------------------------------------
 
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
+--transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
+transformationApply wc f s pt = mmap (((flip substitute) . snd) pt wc) (mmap f (((flip match) . fst) pt wc s))
 
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
-transformationsApply wc f pts s = listToMaybe (mapMaybe (transformationApply wc f s) pts)
+transformationsApply wc f pts s = (listToMaybe .^ mapMaybe .^^ transformationApply) wc f s pts
 
