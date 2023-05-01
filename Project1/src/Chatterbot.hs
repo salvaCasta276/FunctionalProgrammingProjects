@@ -124,9 +124,7 @@ replace :: Eq a => a -> a -> [a] -> [a]
 --    | (==) a x = (:) b (replace a xs b)
 --    | otherwise = (:) x (replace a xs b)
 
-replace x b = foldr (\a -> if (x == a) 
-                     then (b:)
-                     else (a:)) []
+replace x b = foldr (\a -> if x == a then (b:) else (a:)) []
 
 --replace x b = foldr (if (.^) ((==) x) const 
 --                     then (.^) ((:) b) (flip const)
@@ -141,13 +139,13 @@ match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    | (==) p wc = if (||) ((&&) ((not . null) nextWord) (isPrefixOf nextWord xs)) ((&&) (null nextWord) (null xs))
-                  then (>>=) (mmap ((:) x) (match wc ps xs)) (Just . pure . head)
-                  else (mmap ((:) x) (match wc (wc:ps) xs))
+    | p == wc = if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
+                  then mmap (x:) (match wc ps xs) >>= Just . pure . head
+                  else mmap (x:) (match wc (wc:ps) xs)
 --    | p == wc = orElse (singleWildcardMatch wc (p:ps) (x:xs)) (longerWildcardMatch wc (p:ps) (x:xs))
-    | (==) p x = match wc ps xs
+    | p == x = match wc ps xs
     | otherwise = Nothing
-    where nextWord = (takeWhile (flip (/=) wc) ps)
+    where nextWord = (takeWhile . (/=)) wc ps
 
 -- Helper function to match
 --singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
