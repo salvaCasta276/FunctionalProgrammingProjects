@@ -1,3 +1,4 @@
+--Salvador Castagnino, Aden McCusker
 module Chatterbot where
 import Utilities
 import System.Random
