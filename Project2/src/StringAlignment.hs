@@ -9,16 +9,17 @@ main = do
   --putStrLn ("The maxLens are: " ++ show maxLens)
   outputOptAlignments "writers" "vintner"
 
-scoreMatch = 0
-scoreMismatch = -1
 scoreSpace = -1
+score(x, '-') = scoreSpace
+score('-', x) = scoreSpace
+score(x, y) = if x == y then 0 else -1
 
 similarityScore :: String -> String -> Int
 similarityScore xs [] = scoreSpace * length xs
 similarityScore [] ys = scoreSpace * length ys
-similarityScore (x:xs) (y:ys) = maximum [similarityScore xs ys + if x == y then scoreMatch else scoreMismatch,
-                                        similarityScore xs (y:ys) + scoreSpace,
-                                        similarityScore (x:xs) ys + scoreSpace]
+similarityScore (x:xs) (y:ys) = maximum [similarityScore xs ys + score(x, y),
+                                        similarityScore xs (y:ys) + score(x, '-'),
+                                        similarityScore (x:xs) ys + score('-', y)]
 
 newSimilarityScore :: String -> String -> Int
 newSimilarityScore xs ys = simCache (length xs) (length ys)
@@ -29,7 +30,7 @@ newSimilarityScore xs ys = simCache (length xs) (length ys)
     mcsEntry :: Int -> Int -> Int
     mcsEntry i 0 = scoreSpace * i
     mcsEntry 0 j = scoreSpace * j
-    mcsEntry i j = maximum [simCache (i-1) (j-1) + if x == y then scoreMatch else scoreMismatch,
+    mcsEntry i j = maximum [simCache (i-1) (j-1) + score(x, y),
                             scoreSpace + simCache (i-1) j,
                             scoreSpace + simCache i (j-1)]
       where
@@ -47,11 +48,28 @@ type AlignmentType = (String,String)
 optAlignments :: String -> String -> [AlignmentType]
 optAlignments xs [] = [(xs, take (length xs) (repeat '-'))]
 optAlignments [] ys = [(take (length ys) (repeat '-'), ys)]
-optAlignments (x:xs) (y:ys) = concat (map (\(x,y,z) -> (uncurry attachHeads y) (uncurry optAlignments z)) maxims)
+optAlignments (x:xs) (y:ys) = concat (map (\(a, b) -> (uncurry attachHeads a) (uncurry optAlignments b)) maxims)
   where
-    maxims = maximaBy (\(x,y,z) -> x + uncurry similarityScore z) [(if x == y then scoreMatch else scoreMismatch, (x, y), (xs, ys)),
-                                                                        (scoreSpace, (x, '-'), (xs, (y:ys))),
-                                                                        (scoreSpace, ('-', y), ((x:xs), ys))]
+    maxims = maximaBy (\(a, b) -> score a + uncurry similarityScore b) [((x, y), (xs, ys)),
+                                                                        ((x, '-'), (xs, (y:ys))),
+                                                                        (('-', y), ((x:xs), ys))]
+      where
+
+newSimilarityScore :: String -> String -> Int
+newSimilarityScore xs ys = simCache (length xs) (length ys)
+  where
+    simCache i j = mcsTable!!i!!j
+    mcsTable = [[ mcsEntry i j | j<-[0..]] | i<-[0..] ]
+       
+    mcsEntry :: Int -> Int -> Int
+    mcsEntry i 0 = scoreSpace * i
+    mcsEntry 0 j = scoreSpace * j
+    mcsEntry i j = maximum [simCache (i-1) (j-1) + score(x, y),
+                            scoreSpace + simCache (i-1) j,
+                            scoreSpace + simCache i (j-1)]
+      where
+         x = xs!!(i-1)
+         y = ys!!(j-1)
 
 outputOptAlignments :: String -> String -> IO ()
 outputOptAlignments string1 string2 = print (optAlignments string1 string2)
