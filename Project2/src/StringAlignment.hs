@@ -4,12 +4,10 @@ import Text.Printf
 
 main :: IO ()
 main = do
-  --let score = newSimilarityScore "aferociousmonadatemyhamster" "functionalprogrammingrules"
-  --putStrLn ("The score is: " ++ show score)
-  --let maxLens = maximaBy length ["cs", "efd", "lth", "it"]
-  --putStrLn ("The maxLens are: " ++ show maxLens)
+  --printf "The score is %d\n\n" (newSimilarityScore "writers" "vintner")
+  outputOptAlignments "writers" "vintner"
   --outputOptAlignments "aferociousmonadatemyhamster" "functionalprogrammingrules"
-  outputOptAlignments "bananrepubliksinvasionsarmestabsadjutant" "kontrabasfiolfodralmakarmästarlärling"
+  --outputOptAlignments "bananrepubliksinvasionsarmestabsadjutant" "kontrabasfiolfodralmakarmästarlärling"
 
 scoreSpace = -1
 score(x, '-') = scoreSpace
@@ -48,13 +46,13 @@ maximaBy valueFcn xs = filter ((== maximum (map valueFcn xs)) . valueFcn) xs
 type AlignmentType = (String,String)
 
 optAlignments :: String -> String -> [AlignmentType]
-optAlignments xs [] = [(xs, take (length xs) (repeat '-'))]
-optAlignments [] ys = [(take (length ys) (repeat '-'), ys)]
-optAlignments (x:xs) (y:ys) = concat (map (\(a, b) -> (uncurry attachHeads a) (uncurry optAlignments b)) opts)
+optAlignments xs [] = [(xs, replicate (length xs) '-')]
+optAlignments [] ys = [(replicate (length ys) '-', ys)]
+optAlignments (x:xs) (y:ys) = concatMap (\(a, b) -> uncurry attachHeads a (uncurry optAlignments b)) opts
   where
     opts = maximaBy (\(a, b) -> score a + uncurry similarityScore b) [((x, y), (xs, ys)),
-                                                                        ((x, '-'), (xs, (y:ys))),
-                                                                        (('-', y), ((x:xs), ys))]
+                                                                        ((x, '-'), (xs, y:ys)),
+                                                                        (('-', y), (x:xs, ys))]
 
 newOptAlignments :: String -> String -> [AlignmentType]
 newOptAlignments xs ys = snd (optCache (length xs) (length ys))
@@ -63,9 +61,9 @@ newOptAlignments xs ys = snd (optCache (length xs) (length ys))
     optTable = [[ optEntry i j | j<-[0..]] | i<-[0..] ]
        
     optEntry :: Int -> Int -> (Int, [AlignmentType])
-    optEntry i 0 = (scoreSpace * i, [(reverse (take i (reverse xs)), take i (repeat '-'))])
-    optEntry 0 j = (scoreSpace * j, [(take j (repeat '-'), reverse (take j (reverse ys)))])
-    optEntry i j = ((maximum . fst . unzip) opts, (concat . snd . unzip . (maximaBy fst)) opts)
+    optEntry i 0 = (scoreSpace * i, [(reverse (take i (reverse xs)), replicate i '-')])
+    optEntry 0 j = (scoreSpace * j, [(replicate j '-', reverse (take j (reverse ys)))])
+    optEntry i j = ((maximum . map fst) opts, (concatMap snd . maximaBy fst) opts)
       where
          x = xs!!(length xs - i)
          y = ys!!(length ys - j)
