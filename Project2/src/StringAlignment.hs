@@ -5,9 +5,9 @@ import Text.Printf
 main :: IO ()
 main = do
   --printf "The score is %d\n\n" (newSimilarityScore "writers" "vintner")
-  outputOptAlignments "writers" "vintner"
+  --outputOptAlignments "writers" "vintner"
   --outputOptAlignments "aferociousmonadatemyhamster" "functionalprogrammingrules"
-  --outputOptAlignments "bananrepubliksinvasionsarmestabsadjutant" "kontrabasfiolfodralmakarmästarlärling"
+  outputOptAlignments "bananrepubliksinvasionsarmestabsadjutant" "kontrabasfiolfodralmakarmästarlärling"
 
 scoreSpace = -1
 score(x, '-') = scoreSpace
@@ -79,18 +79,3 @@ outputOptAlignments string1 string2 = do
     where
       printPair (x, y) = putStrLn (x ++ "\n" ++ y ++ "\n")
       alignments = newOptAlignments string1 string2
-
---There are 3 optimal alignments:
-
---w r i t - e r s
---v i n t n e r -
-
---w r i - t - e r s
---- v i n t n e r -
-
---w r i - t - e r s
---v - i n t n e r -
-
---There were 3 optimal alignments!
-
-
