@@ -1,13 +1,7 @@
 -- Salvador Castagnino, Aden McCusker
+module StringAlignment where
 import Data.List
 import Text.Printf
-
-main :: IO ()
-main = do
-  --printf "The score is %d\n\n" (newSimilarityScore "writers" "vintner")
-  --outputOptAlignments "writers" "vintner"
-  --outputOptAlignments "aferociousmonadatemyhamster" "functionalprogrammingrules"
-  outputOptAlignments "bananrepubliksinvasionsarmestabsadjutant" "kontrabasfiolfodralmakarmästarlärling"
 
 scoreSpace = -1
 score(x, '-') = scoreSpace
