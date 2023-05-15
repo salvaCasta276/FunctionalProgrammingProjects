@@ -35,7 +35,7 @@ word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 chars :: Int -> Parser String
-chars n = ((iter char) ? ((<=n) . length)) ? ((==n) . length)
+chars = countIter char
 
 accept :: String -> Parser String
 accept w = (token (chars (length w))) ? (==w)
@@ -57,3 +57,7 @@ number' n = digitVal #> (\ d -> number' (10*n+d))
           ! return n
 number :: Parser Integer
 number = token (digitVal #> number')
+
+countIter :: Parser a -> Int -> Parser [a]
+countIter m 0 = return []
+countIter m i = m # countIter m (i-1) >-> cons

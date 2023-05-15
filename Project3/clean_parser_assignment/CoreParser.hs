@@ -49,6 +49,9 @@ fail cs = Nothing
         Nothing -> Nothing
         Just(b, cs'') -> Just((a, b), cs'')
 
+--(#) :: Parser a -> Parser b -> Parser (a, b)
+--m # n = m #> (\x -> (n #> (\y -> return (x, y))))
+
 (>->) :: Parser a -> (a -> b) -> Parser b
 (m >-> b) cs = 
     case m cs of

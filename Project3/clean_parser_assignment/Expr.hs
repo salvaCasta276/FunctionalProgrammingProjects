@@ -70,8 +70,14 @@ shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 
+#See how to manage errors
 value :: Expr -> Dictionary.T String Integer -> Integer
-value (Num n) _ = error "value not implemented"
+value (Num n) _ = n
+value (Var v) dict = Dictionary.lookup(v)
+value (Add e1 e2) = value e1 + value e2
+value (Sub e1 e2) = value e1 - value e2
+value (Mul e1 e2) = value e1 * value e2
+value (Div e1 e2) = value e1 / value e2
 
 instance Parse Expr where
     parse = expr

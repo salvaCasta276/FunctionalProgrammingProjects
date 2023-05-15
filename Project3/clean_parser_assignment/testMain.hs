@@ -2,4 +2,6 @@ import TestParser
 
 main :: IO ()
 main = do
-    print a4
+    print c1
+    print c2
+    print c3
