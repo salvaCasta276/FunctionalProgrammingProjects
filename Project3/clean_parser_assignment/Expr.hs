@@ -70,14 +70,20 @@ shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 
-#See how to manage errors
+--How to handle the case in which the division is not an integer
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num n) _ = n
-value (Var v) dict = Dictionary.lookup(v)
-value (Add e1 e2) = value e1 + value e2
-value (Sub e1 e2) = value e1 - value e2
-value (Mul e1 e2) = value e1 * value e2
-value (Div e1 e2) = value e1 / value e2
+value (Var v) dict =
+        case Dictionary.lookup v dict of
+        Just n -> n
+        Nothing -> error ("undefined variable " ++ (show v))
+value (Add e1 e2) dict = value e1 dict + value e2 dict
+value (Sub e1 e2) dict = value e1 dict - value e2 dict
+value (Mul e1 e2) dict = value e1 dict * value e2 dict
+--value (Div e1 e2) dict =
+--        case e2 of
+--        0 -> error ("division by 0")
+--        _ -> value e1 dict / value e2 dict
 
 instance Parse Expr where
     parse = expr
