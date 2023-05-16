@@ -22,8 +22,11 @@ m -# n = (m # n) >-> snd
 (#-) :: Parser a -> Parser b -> Parser a
 m #- n = (m # n) >-> fst
 
+comment :: Parser Char
+comment = accept "--" -# iter (char ? (/= '\n')) >-> head
+
 spaces :: Parser String
-spaces =  iter (char ? isSpace)
+spaces =  iter ((char ? isSpace) ! comment)
 
 token :: Parser a -> Parser a
 token m = m #- spaces
