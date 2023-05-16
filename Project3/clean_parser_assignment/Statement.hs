@@ -20,8 +20,8 @@ buildAss (v, e) = Assignment v e
 ifElse = accept "if" -# Expr.parse #- require "then" # Statement.parse #- require "else" # Statement.parse >-> buildIfElse
 buildIfElse (cond, thenStmts, elseStmts) = If cond thenStmts elseStmts
 
-while = accept "while" -# Expr.parse #- require "do" # begEnd >-> buildWhile
-buildWhile expr beg = While expr beg 
+while = accept "while" -# Expr.parse #- require "do" # Statement.parse >-> buildWhile
+buildWhile expr loopedStmt = While expr beg 
 
 skip = accept "skip" #- require ";" >-> buildSkip
 buildSkip _ = Skip
@@ -32,7 +32,7 @@ buildRead var = Read var
 write = accept "write" -# Expr.parse #- require ";" >-> buildWrite
 buildWrite expr = Write expr 
 
-begEnd = accept "begin" -# iter Statement.parser #- require "end" >-> buildBegEnd
+begEnd = accept "begin" -# iter (Statement.parser ! skip) #- require "end" >-> buildBegEnd
 begEnd [stmts] = BegEnd [stmts]
 
 
@@ -44,19 +44,17 @@ exec (If cond thenStmts elseStmts: stmts) dict input =
     else exec (elseStmts: stmts) dict input
 exec (Assignment varName valueExpr : stmts) dict input =
     exec stmts (Dictionary.insert (varName, Expr.value valueExpr dict) dict) input
---TODO See how to update input array if there is a read inside of a while loop
---TODO Ask about the use of let for sequential evaluation, we have to call exec stmts before we use the dict
-exec (While expr beg : stmts) dict input =
-    let out = exec beg dict input
-    in out ++ (if (Expr.value expr dict) > 0 then exec (While expr beg : stmts) dict input else exec stmts dict input)
-exec (Skip : stmts) dict input = []
+exec (While expr loopedStmt : stmts) dict input
+    | Expr.value expr dict > 0 = exec (loopedStmt : While expr loopedStmt : stmts) dict input
+    | otherwise = exec stmts dict input
 exec (Read var : stmts) dict [] = error ("No input value for read variable" ++ (show var))
 exec (Read var : stmts) dict (x:xs) = exec stmts (Dictionary.insert (var, x) dict xs)
 exec (Write expr : stmts) dict input = (Expr.value expr dict : exec stmts dict input)
---TODO see if it is ok to assume that the BegEnd statement can only appear inside of a while
-exec (BegEnd innerStmts) dict input = exec innerStmts dict input
+exec (BegEnd (Skip : skippedStmts) : stmts) dict input = exec stmts dict input
+exec (BegEnd (x:xs) : stmts) dict input = exec (x : BegEnd xs : stmts) dict input
+exec (BegEnd [] : stmts) dict input = exec stmts dict input
 
 
 instance Parse Statement where
-  parse = error "Statement.parse not implemented"
+  parse = assignment ! ifElse ! while ! read ! write
   toString = error "Statement.toString not implemented"
