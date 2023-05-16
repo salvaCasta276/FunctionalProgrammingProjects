@@ -23,7 +23,6 @@ buildIfElse ((cond, thenStmts), elseStmts) = If cond thenStmts elseStmts
 while = accept "while" -# Expr.parse #- require "do" # parse >-> buildWhile
 buildWhile (expr, loopedStmts) = While expr loopedStmts 
 
---TODO I assume that skip will appear only in begin/end and will exit this structure
 skip = accept "skip" #- require ";" >-> buildSkip
 buildSkip _ = Skip
 
@@ -34,7 +33,7 @@ write = accept "write" -# Expr.parse #- require ";" >-> buildWrite
 buildWrite expr = Write expr 
 
 begEnd = accept "begin" -# iter (parse ! skip) #- require "end" >-> buildBegEnd
-buildBegEnd [stmts] = BegEnd [stmts]
+buildBegEnd xs = BegEnd xs
 
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
 exec [] _ _ = []
@@ -53,7 +52,8 @@ exec (Write expr : stmts) dict input = (Expr.value expr dict : exec stmts dict i
 exec (BegEnd (Skip : skippedStmts) : stmts) dict input = exec stmts dict input
 exec (BegEnd (x:xs) : stmts) dict input = exec (x : BegEnd xs : stmts) dict input
 exec (BegEnd [] : stmts) dict input = exec stmts dict input
+exec (Skip : stmts) dict input = exec stmts dict input
 
 instance Parse Statement where
-  parse = ifElse ! while ! Statement.read ! write ! begEnd ! assignment
+  parse = ifElse ! while ! Statement.read ! write ! begEnd ! skip ! assignment
   toString = error "Statement.toString not implemented"
