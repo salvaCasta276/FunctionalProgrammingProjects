@@ -1,5 +1,6 @@
 import TestParser
 import TestExpr
+import Statement
 
 main :: IO ()
 main = do
