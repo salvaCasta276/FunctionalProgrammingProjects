@@ -8,7 +8,6 @@ p0, p1, p2, p3, p4 :: Program.T
 p0 = fromString  ("\
 \read k;\
 \read n;\
-\-- a comment\n\
 \m := 1;\
 \while n-m do\
 \  begin\
@@ -22,7 +21,6 @@ p0 = fromString  ("\
 p1 = fromString  ("\
 \read n;\
 \read b;\
-\-- a comment\n\
 \m := 1;\
 \s := 0;\
 \p := 1;\
@@ -63,10 +61,10 @@ p2 = fromString (toString p0)
 p3 = fromString (toString p1)
 
 rp0 = Program.exec p0 [3,16]
-rp2 = Program.exec p0 [4,33]
+rp2 = Program.exec p2 [4,33]
 rp3 = Program.exec p0 [5,63]
 
-rp1 = Program.exec p1 [1024, 2]
+rp1 = Program.exec p3 [1024, 2]
 
 s4 = "\
 \read a;\
