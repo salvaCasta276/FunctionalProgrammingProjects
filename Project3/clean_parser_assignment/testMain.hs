@@ -2,5 +2,5 @@ import TestProgram
 
 main :: IO ()
 main = do
-    print rp2
-    print rp1
+    print rp5
+    print str5

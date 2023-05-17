@@ -28,14 +28,14 @@ import Parser hiding (T)
 import qualified Dictionary
 
 data Expr = Num Integer | Var String | Add Expr Expr 
-       | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
+       | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Pow Expr Expr
          deriving Show
 
 type T = Expr
 
-var, num, factor, term, expr :: Parser Expr
+var, num, factor, term, expr, pow :: Parser Expr
 
-term', expr' :: Expr -> Parser Expr
+term', expr', pow' :: Expr -> Parser Expr
 
 var = word >-> Var
 
@@ -47,15 +47,20 @@ mulOp = lit '*' >-> (\_ -> Mul) !
 addOp = lit '+' >-> (\_ -> Add) !
         lit '-' >-> (\_ -> Sub)
 
+powOp = lit '^' >-> (\_ -> Pow)
+
 bldOp e (oper,e') = oper e e'
 
 factor = num !
          var !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
+
+pow' e = powOp # pow >-> bldOp e ! return e
+pow = factor #> pow'
              
-term' e = mulOp # factor >-> bldOp e #> term' ! return e
-term = factor #> term'
+term' e = mulOp # pow >-> bldOp e #> term' ! return e
+term = pow #> term'
        
 expr' e = addOp # term >-> bldOp e #> expr' ! return e
 expr = term #> expr'
@@ -69,6 +74,7 @@ shw prec (Add t u) = parens (prec>5) (shw 5 t ++ "+" ++ shw 5 u)
 shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
+shw prec (Pow t u) = parens (prec>7) (shw 8 t ++ "^" ++ shw 7 u)
 
 --TODO How to handle the case in which the division is not an integer
 value :: Expr -> Dictionary.T String Integer -> Integer
@@ -80,6 +86,7 @@ value (Var v) dict =
 value (Add e1 e2) dict = value e1 dict + value e2 dict
 value (Sub e1 e2) dict = value e1 dict - value e2 dict
 value (Mul e1 e2) dict = value e1 dict * value e2 dict
+value (Pow e1 e2) dict = value e1 dict ^ value e2 dict
 value (Div e1 e2) dict =
         case value e2 dict of
         0 -> error ("division by 0")

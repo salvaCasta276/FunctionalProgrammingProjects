@@ -84,3 +84,11 @@ s4 = "\
 p4 = fromString s4
 
 rp4 = Program.exec p4 [4,4]
+
+s5 = "write 2*2^3+1; write 1+2^3*2; write (2+1)^2;"
+
+p5 = fromString s5
+
+rp5 = Program.exec p5 []
+
+str5 = toString p5
