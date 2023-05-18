@@ -61,14 +61,14 @@ instance Parse Statement where
   toString (Assignment varName valueExpr) =
     varName ++ " := " ++ Expr.toString valueExpr ++ ";\n"
   toString (If cond thenStmts elseStmts) =
-    "if " ++ Expr.toString cond ++ " then\n\t" ++ toString thenStmts ++ "else\n\t" ++ toString elseStmts
+    "if " ++ Expr.toString cond ++ " then\n" ++ toString thenStmts ++ "else\n" ++ toString elseStmts
   toString (While cond loopedStmts) =
-    "while " ++ Expr.toString cond ++ " do\n\t" ++ toString loopedStmts
+    "while " ++ Expr.toString cond ++ " do\n" ++ toString loopedStmts
   toString (Read var) =
     "read " ++ var ++ ";\n"
   toString (Write var) =
     "write " ++ Expr.toString var ++ ";\n"
   toString (BegEnd stmts) =
-    "begin\n\t" ++ concat (map toString stmts) ++ "end\n"
+    "begin\n" ++ concat (map toString stmts) ++ "end\n"
   toString (Skip) =
     "skip;\n"

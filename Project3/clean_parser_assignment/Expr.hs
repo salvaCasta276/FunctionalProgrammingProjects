@@ -76,7 +76,6 @@ shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 shw prec (Pow t u) = parens (prec>7) (shw 8 t ++ "^" ++ shw 7 u)
 
---TODO How to handle the case in which the division is not an integer
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num n) _ = n
 value (Var v) dict =

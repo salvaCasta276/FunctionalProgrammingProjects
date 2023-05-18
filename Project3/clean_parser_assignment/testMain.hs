@@ -1,6 +1,13 @@
-import TestProgram
+import ExprSpec
+import ProgramSpec
+import StatementSpec
+import Test.Hspec.Runner
 
 main :: IO ()
 main = do
-    print rp5
-    print str5
+    e <- hspecResult exprSpec
+    p <- hspecResult programSpec
+    s <- hspecResult statementSpec
+    print e
+    print p
+    print s
