@@ -41,10 +41,10 @@ chars :: Int -> Parser String
 chars = countIter char
 
 accept :: String -> Parser String
-accept w = (token (chars (length w))) ? (==w)
+accept w = token (chars (length w)) ? (==w)
 
 require :: String -> Parser String
-require w  = (accept w) ! err w
+require w  = accept w ! err w
 
 lit :: Char -> Parser Char
 lit c = token char ? (==c)

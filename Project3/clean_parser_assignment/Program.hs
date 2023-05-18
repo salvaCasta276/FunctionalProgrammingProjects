@@ -10,4 +10,4 @@ instance Parse T where
   toString (Program (x:xs)) = Statement.toString x ++ toString (Program xs) 
              
 exec :: T -> [Integer] -> [Integer]
-exec (Program stmts) input = Statement.exec stmts Dictionary.empty input
+exec (Program stmts) = Statement.exec stmts Dictionary.empty

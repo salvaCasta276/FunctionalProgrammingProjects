@@ -26,6 +26,7 @@ module Expr(Expr, T, parse, fromString, value, toString) where
 import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
+import Data.Maybe
 
 data Expr = Num Integer | Var String | Add Expr Expr 
        | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Pow Expr Expr
@@ -41,13 +42,13 @@ var = word >-> Var
 
 num = number >-> Num
 
-mulOp = lit '*' >-> (\_ -> Mul) !
-        lit '/' >-> (\_ -> Div)
+mulOp = lit '*' >-> const Mul !
+        lit '/' >-> const Div
 
-addOp = lit '+' >-> (\_ -> Add) !
-        lit '-' >-> (\_ -> Sub)
+addOp = lit '+' >-> const Add !
+        lit '-' >-> const Sub
 
-powOp = lit '^' >-> (\_ -> Pow)
+powOp = lit '^' >-> const Pow
 
 bldOp e (oper,e') = oper e e'
 
@@ -78,17 +79,15 @@ shw prec (Pow t u) = parens (prec>7) (shw 8 t ++ "^" ++ shw 7 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num n) _ = n
-value (Var v) dict =
-        case Dictionary.lookup v dict of
-        Just n -> n
-        Nothing -> error ("undefined variable " ++ (show v))
+value (Var v) dict = fromMaybe (error ("undefined variable " ++ show v))
+                       (Dictionary.lookup v dict)
 value (Add e1 e2) dict = value e1 dict + value e2 dict
 value (Sub e1 e2) dict = value e1 dict - value e2 dict
 value (Mul e1 e2) dict = value e1 dict * value e2 dict
 value (Pow e1 e2) dict = value e1 dict ^ value e2 dict
 value (Div e1 e2) dict =
         case value e2 dict of
-        0 -> error ("division by 0")
+        0 -> error "division by 0"
         _ -> value e1 dict `div` value e2 dict
 
 instance Parse Expr where
