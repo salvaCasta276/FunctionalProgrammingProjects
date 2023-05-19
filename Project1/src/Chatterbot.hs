@@ -117,13 +117,27 @@ match _ [] [] = Just []
 match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
-    --The helper functions are not explicitly used but the idea is still followed
-    | p == wc = if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
-                  then mmap (x:) (match wc ps xs) >>= Just . pure . head
-                  else mmap (x:) (match wc (wc:ps) xs)
-    | p == x = match wc ps xs
-    | otherwise = Nothing
-    where nextWord = (takeWhile . (/=)) wc ps
+  | p == wc = orElse (singleWildcardMatch (p:ps) (x:xs)) (longerWildcardMatch (p:ps) (x:xs))
+--    | p == wc = if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
+--                  then mmap (x:) (match wc ps xs) >>= Just . pure . head
+--                  else mmap (x:) (match wc (wc:ps) xs)
+  | p == x = match wc ps xs
+  | otherwise = Nothing
+--  where nextWord = (takeWhile . (/=)) wc ps
+
+singleWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+singleWildcardMatch (wc:ps) (x:xs) =
+  if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
+  then mmap (x:) (match wc ps xs) >>= Just . pure . head
+  else Nothing
+  where nextWord = (takeWhile . (/=)) wc ps
+
+longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+longerWildcardMatch (wc:ps) (x:xs) =
+  if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
+  then Nothing
+  else mmap (x:) (match wc (wc:ps) xs)
+  where nextWord = (takeWhile . (/=)) wc ps
 
 -- Test cases --------------------
 
