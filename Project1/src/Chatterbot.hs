@@ -118,12 +118,8 @@ match _ [] (x:xs) = Nothing
 match _ (p:ps) [] = Nothing
 match wc (p:ps) (x:xs)
   | p == wc = orElse (singleWildcardMatch (p:ps) (x:xs)) (longerWildcardMatch (p:ps) (x:xs))
---    | p == wc = if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
---                  then mmap (x:) (match wc ps xs) >>= Just . pure . head
---                  else mmap (x:) (match wc (wc:ps) xs)
   | p == x = match wc ps xs
   | otherwise = Nothing
---  where nextWord = (takeWhile . (/=)) wc ps
 
 singleWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
 singleWildcardMatch (wc:ps) (x:xs) =
