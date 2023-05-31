@@ -1,10 +1,7 @@
---Salvador Castagnino, Aden McCusker
 module Chatterbot where
 import Utilities
 import System.Random
 import Data.Char
-import Data.List
-import Data.Maybe
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -24,24 +21,21 @@ chatterbot botName botRules = do
 type Phrase = [String]
 type PhrasePair = (Phrase, Phrase)
 type BotBrain = [(Phrase, [Phrase])]
-(.^) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
-(.^) = (.) . (.)
-(.^^):: (b -> c) -> (a1 -> a2 -> a3 -> b) -> a1 -> a2 -> a3 -> c
-(.^^)= (.) . (.) . (.)
+
 
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-stateOfMind brain = do
-  rand <- randomIO :: IO Int
-  let randomBrain = map (\x -> (fst x, snd x !! (mod rand . (length . snd)) x)) brain
-  return (rulesApply randomBrain)
+{- TO BE WRITTEN -}
+stateOfMind _ = return id
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-rulesApply = try . transformationsApply "*" reflect 
+{- TO BE WRITTEN -}
+rulesApply _ = id
 
 reflect :: Phrase -> Phrase
-reflect = map (try (`lookup` reflections))
+{- TO BE WRITTEN -}
+reflect = id
 
 reflections =
   [ ("am",     "are"),
@@ -62,6 +56,7 @@ reflections =
     ("you",    "me")
   ]
 
+
 ---------------------------------------------------------------------------------
 
 endOfDialog :: String -> Bool
@@ -74,9 +69,12 @@ prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|") 
 
 rulesCompile :: [(String, [String])] -> BotBrain
-rulesCompile = map (map2 (prepare, map prepare))
+{- TO BE WRITTEN -}
+rulesCompile _ = []
+
 
 --------------------------------------
+
 
 reductions :: [PhrasePair]
 reductions = (map.map2) (words, words)
@@ -94,10 +92,12 @@ reductions = (map.map2) (words, words)
   ]
 
 reduce :: Phrase -> Phrase
-reduce = fix (reductionsApply reductions)
+reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-reductionsApply = try . transformationsApply "*" id
+{- TO BE WRITTEN -}
+reductionsApply _ = id
+
 
 -------------------------------------------------------
 -- Match and substitute
@@ -105,35 +105,25 @@ reductionsApply = try . transformationsApply "*" id
 
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute a t s = concat ((replace . pure) a s (map pure t))
+substitute _ _ _ = []
+{- TO BE WRITTEN -}
 
-replace :: Eq a => a -> a -> [a] -> [a]
-replace x b = foldr (\a -> if x == a then (b:) else (a:)) []
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match _ [] [] = Just []
-match _ [] (x:xs) = Nothing
-match _ (p:ps) [] = Nothing
-match wc (p:ps) (x:xs)
-  | p == wc = orElse (singleWildcardMatch (p:ps) (x:xs)) (longerWildcardMatch (p:ps) (x:xs))
-  | p == x = match wc ps xs
-  | otherwise = Nothing
+match _ _ _ = Nothing
+{- TO BE WRITTEN -}
 
-singleWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
-singleWildcardMatch (wc:ps) (x:xs) =
-  if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
-  then mmap (x:) (match wc ps xs) >>= Just . pure . head
-  else Nothing
-  where nextWord = (takeWhile . (/=)) wc ps
 
-longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
-longerWildcardMatch (wc:ps) (x:xs) =
-  if (not . null) nextWord && isPrefixOf nextWord xs || null nextWord && null xs
-  then Nothing
-  else mmap (x:) (match wc (wc:ps) xs)
-  where nextWord = (takeWhile . (/=)) wc ps
+-- Helper function to match
+singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+singleWildcardMatch (wc:ps) (x:xs) = Nothing
+{- TO BE WRITTEN -}
+longerWildcardMatch (wc:ps) (x:xs) = Nothing
+{- TO BE WRITTEN -}
+
+
 
 -- Test cases --------------------
 
@@ -147,13 +137,21 @@ substituteCheck = substituteTest == testString
 matchTest = match '*' testPattern testString
 matchCheck = matchTest == Just testSubstitutions
 
+
+
 -------------------------------------------------------
 -- Applying patterns
 --------------------------------------------------------
 
+-- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wc f s pt = mmap (substitute wc (snd pt)) (mmap f (match wc (fst pt) s))
+transformationApply _ _ _ _ = Nothing
+{- TO BE WRITTEN -}
 
+
+-- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
-transformationsApply wc f pts s = (listToMaybe .^ mapMaybe .^^ transformationApply) wc f s pts
+transformationsApply _ _ _ _ = Nothing
+{- TO BE WRITTEN -}
+
 
